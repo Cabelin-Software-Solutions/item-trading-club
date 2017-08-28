@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+
+{% block content %}
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+        <h1 class="text-center">My Profile</h1>
+        <p class="lead text-center">This is where you can edit your profile (Firstname, Lastname, Email, Password).</p>
+    </div>
+  </div>
+</div>
+
+{% if message %}
+<div class="alert alert-success text-center">{{ message }}</div>
+{% endif %}
+
+{% if error %}
+<div class="alert alert-danger text-center">{{ error }}</div>
+{% endif %}
+{% endblock %}

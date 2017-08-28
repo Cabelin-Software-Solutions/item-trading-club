@@ -7,9 +7,86 @@
     <div class="col-md-12">
       <div class="jumbotron">
         <h1>Item Trading Club</h1>
-        <p class="lead">Exchange your goods with other goods.</p>
+        {% if user.is_authenticated %}
+          <p class="lead">Welcome <strong>{{ user.username }}</strong>. Exchange your goods with other goods.</p>
+        {% else %}
+          <p class="lead text-center">Exchange your goods with other goods.</p>
+        {% endif %}
       </div>
     </div>
   </div>
+
+  <!-- Login Form -->
+  {% if not user.is_authenticated %}
+  <div class="row">
+    <div class="col-md-3 col-md-offset-3">
+      <h1 class="text-center">Login</h1>
+      <form action="/login/" method="post">
+        {% csrf_token %}
+        {% for field in login_form %}
+          <div class="fieldWrapper">
+            {{ field.errors }}
+            {{ field.label_tag }} {{ field }}
+            {% if field.help_text %}
+            <p class="help">{{ field.help_text|safe }}</p>
+            {% endif %}
+          </div>
+        {% endfor %}
+        <hr>
+        <div class="form-group fieldWrapper">
+          <button class="btn btn-primary" type="submit">Login</button>
+          or
+          <div class="btn btn-primary" data-toggle="modal" data-target="#myModal">Register</div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- TO DO: Recent Items (last 10 items up for trade or Random?) -->
+  <div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal fade" id="myModal" role="dialog">
+    <div class="modal-dialog">
+
+      <!-- Modal Register form content-->
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+          <h3 class="modal-title text-center"><strong>Register</strong></h3>
+        </div>
+        <div class="modal-body">
+          <form action="/register/" method="POST">
+            {% csrf_token %}
+            {% for field in register_form %}
+              <div class="fieldWrapper">
+                {{ field.errors }}
+                {{ field.label_tag }} {{ field }}
+                {% if field.help_text %}
+                <p class="help">{{ field.help_text|safe }}</p>
+                {% endif %}
+              </div>
+            {% endfor %}
+            <div class="form-group fieldWrapper">
+              <button class="btn btn-primary" type="submit">Signup</button>
+              <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  {% endif %}
+
 </div>
+
+{% if message %}
+<div class="alert alert-success text-center">{{ message }}</div>
+{% endif %}
+
+{% if error %}
+<div class="alert alert-danger text-center">{{ error }}</div>
+{% endif %}
 {% endblock %}
