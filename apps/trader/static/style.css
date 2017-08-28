@@ -1,3 +1,20 @@
-h1 {
-  color: green;
+.fieldWrapper {
+  margin: 10px;
+}
+
+.fieldWrapper input {
+  width: 100%;
+}
+
+.fieldWrapper ul li, .help {
+  font-size: 0.8em;
+}
+
+div.alert {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  margin: 0;
+  display: none;
+  z-index: 999;
 }
