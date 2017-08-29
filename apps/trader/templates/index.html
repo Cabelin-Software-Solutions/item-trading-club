@@ -6,7 +6,7 @@
   <div class="row">
     <div class="col-md-12">
       <div class="jumbotron">
-        <h1>Item Trading Club</h1>
+        <h1 class="text-center">Item Trading Club</h1>
         {% if user.is_authenticated %}
           <p class="lead">Welcome <strong>{{ user.username }}</strong>. Exchange your goods with other goods.</p>
         {% else %}
@@ -82,11 +82,4 @@
 
 </div>
 
-{% if message %}
-<div class="alert alert-success text-center">{{ message }}</div>
-{% endif %}
-
-{% if error %}
-<div class="alert alert-danger text-center">{{ error }}</div>
-{% endif %}
 {% endblock %}
