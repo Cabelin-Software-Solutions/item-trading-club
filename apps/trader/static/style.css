@@ -18,3 +18,14 @@ div.alert {
   display: none;
   z-index: 999;
 }
+
+.btn-xs {
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+.gallery_thumbnail {
+  margin-top: 5px;
+  margin-bottom: 5px;
+  max-height: 300px;
+}

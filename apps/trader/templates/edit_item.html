@@ -28,15 +28,8 @@
 
       <form action="/item/delete/" method="POST" id="delete-form">
         {% csrf_token %}
-        {{ delete_form.as_p }}
+        <input type="hidden" name="delete_id">
       </form>
-    </div>
-    <div class="col-md-4">
-      <div class="list-group">
-        {% for item in items %}
-          <div class="list-group-item clearfix" data-id="{{ item.id }}">{{ item.name }}<img src="{{ item.image }}" class="img-responsive gallery_thumbnail center-block"><span class="btn btn-danger btn-xs pull-right" data-id="{{ item.id }}"><i class="fa fa-trash"></i></span><a class="btn btn-primary btn-xs pull-right" href="/item/edit/?id={{ item.id }}"><i class="fa fa-pencil"></i></a></div>
-        {% endfor %}
-      </div>
     </div>
   </div>
 </div>

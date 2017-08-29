@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+from .models import Item
 
 class LoginForm(forms.Form):
     username = forms.CharField(label='User Name', max_length=64)
@@ -14,3 +15,16 @@ class RegisterForm(UserCreationForm):
     class Meta:
         model = User
         fields = ('username','first_name','last_name','email','password1','password2')
+
+class ItemForm(forms.Form):
+    name = forms.CharField(max_length=255)
+    description = forms.CharField(widget=forms.Textarea)
+    image = forms.CharField(max_length=255)
+
+class DeleteItemForm(forms.Form):
+    id = forms.IntegerField()
+
+class EditItemForm(forms.Form):
+    name = forms.CharField(max_length=255)
+    description = forms.CharField(widget=forms.Textarea)
+    image = forms.CharField(max_length=255)
