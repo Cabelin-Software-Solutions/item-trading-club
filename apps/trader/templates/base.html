@@ -53,6 +53,15 @@
       </div><!-- /.navbar-collapse -->
     </div><!-- /.container-fluid -->
   </nav>
+
+  {% if message %}
+  <div class="alert alert-success text-center">{{ message }}</div>
+  {% endif %}
+
+  {% if error %}
+  <div class="alert alert-danger text-center">{{ error }}</div>
+  {% endif %}
+
   {% block content %}
   {% endblock %}
   <footer>

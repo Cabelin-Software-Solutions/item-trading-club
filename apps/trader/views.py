@@ -6,12 +6,12 @@ from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.decorators import login_required
-from .forms import LoginForm
+from .forms import LoginForm, RegisterForm
 
 # Create your views here.
 def index(request):
     login_form = LoginForm()
-    register_form = UserCreationForm()
+    register_form = RegisterForm()
     message = request.GET.get('message')
     error = request.GET.get('error')
     return render(request, 'index.html', {
@@ -25,7 +25,7 @@ def index(request):
 def register_view(request):
     print request
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = RegisterForm(request.POST)
         if form.is_valid():
             form.save()
             u = form.cleaned_data['username']
