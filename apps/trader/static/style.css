@@ -29,3 +29,12 @@ div.alert {
   margin-bottom: 5px;
   max-height: 300px;
 }
+
+.flexed {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.flexed-items {
+  margin: 5px -1px;
+}
