@@ -26,7 +26,7 @@
                     </div>
                     <div class="modal-body">
 
-                    <form action="/items/trade/{{ proposal.id }}/update" method="POST">
+                    <form action="/item/trade/{{ proposal.id }}/update" method="POST">
                         {% csrf_token %}
                         <p>You are currently trading: {{proposal.sender_item.name}}</p>
                         <div class="form-group">

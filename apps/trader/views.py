@@ -196,7 +196,7 @@ def trade_view(request):
         'sent_proposals' : sent_proposals,
         'completed_proposals': completed_proposals
     }
-    return render(request, 'market.html', context)
+    return render(request, 'trades.html', context)
 
 @login_required
 def trade_request_view(request):
@@ -216,33 +216,33 @@ def trade_request_view(request):
         # create proposal object
         proposal = Proposal(status="Pending",sender=request.user,sender_item=default_item,receiver=rec,receiver_item=rec_item,is_finalized=False)
         proposal.save()
-        trade_id = proposal.id
+        trade_id = str(proposal.id)
     return HttpResponseRedirect("/item/trade/"+ trade_id +"/window?message=Successfully created a trade request")
 
 @login_required
 def trade_window_view(request, trade_id):
     proposal = Proposal.objects.get(pk=trade_id)
-    if request.user.id != proposal.sender.id or request.user.id != proposal.receiver.id:
-        return HttpResponseRedirect("/trades?error=Unauthorized Access")
-    if not proposal.sender_item or not proposal.receiver_item:
-        return HttpResponseRedirect("/trades?error=Invalid Proposal. Either proposal may have been completed, and items have changed owners, or an error has been encountered in the trade request")
+    if request.user.id == proposal.sender.id or request.user.id == proposal.receiver.id:
+        if not proposal.sender_item or not proposal.receiver_item:
+            return HttpResponseRedirect("/trades/?error=Invalid Proposal. Either proposal may have been completed, and items have changed owners, or an error has been encountered in the trade request")
 
-    current_user = request.user
-    sender_items = Item.objects.filter(owner=proposal.sender).filter(in_sender_trade=False)
-    context = {
-        'user'            : current_user,
-        'proposal'        : proposal,
-        'avail_items'     : sender_items
-    }
+        current_user = request.user
+        sender_items = Item.objects.filter(owner=proposal.sender).filter(in_sender_trade=False)
+        context = {
+            'user'            : current_user,
+            'proposal'        : proposal,
+            'avail_items'     : sender_items
+        }
 
-    return render(request, "trade_window.html", context)
+        return render(request, "trade_window.html", context)
+    return HttpResponseRedirect("/trades/?error=Unauthorized Access")
 
 @login_required
 def trade_update_view(request, trade_id):
     if request.method == "POST":
         proposal = Proposal.objects.get(pk=trade_id)
         if not proposal.sender_item or not proposal.receiver_item:
-            return HttpResponseRedirect("/trades?error=Invalid Proposal. Either proposal may have been completed, and items have changed owners, or an error has been encountered in the trade request")
+            return HttpResponseRedirect("/trades/?error=Invalid Proposal. Either proposal may have been completed, and items have changed owners, or an error has been encountered in the trade request")
 
         if proposal.status != 'Cancelled':
             if proposal.is_finalized == False:
@@ -264,7 +264,7 @@ def trade_finalize_view(request, trade_id):
     if request.method == "POST":
         proposal = Proposal.objects.get(pk=trade_id)
         if not proposal.sender_item or not proposal.receiver_item:
-            return HttpResponseRedirect("/trades?error=Invalid Proposal. Either proposal may have been completed, and items have changed owners, or an error has been encountered in the trade request")
+            return HttpResponseRedirect("/trades/?error=Invalid Proposal. Either proposal may have been completed, and items have changed owners, or an error has been encountered in the trade request")
         if proposal.status != 'Cancelled':
             if proposal.sender_item.name != 'No item in trade':
                 proposal.is_finalized = True
