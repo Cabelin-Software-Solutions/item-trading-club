@@ -1,0 +1,46 @@
+<script>
+$(function() {
+  function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie != '') {
+      var cookies = document.cookie.split(';');
+      for (var i = 0; i < cookies.length; i++) {
+        var cookie = jQuery.trim(cookies[i]);
+        if (cookie.substring(0, name.length + 1) == (name + '=')) {
+          cookieValue = decodeURIComponent(
+                        cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+
+  function csrfSafeMethod(method) {
+    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+  }
+
+  $('#delete-form').hide();
+
+  $('textarea').attr('rows', '3');
+
+  // edit button
+  $('.btn-primary').click(function() {
+    var item_id = $(this).data('id');
+    console.log('edit ' + item_id);
+  });
+
+  // delete button
+  $('.btn-danger').click(function() {
+
+    var item_id = $(this).data('id'),
+        item_name = $(this).text(),
+        ask = confirm('Do you really want to delete ' + item_name);
+
+    if (ask) {
+      document.getElementById('id_id').value = item_id;
+      $('#delete-form').submit();
+    }
+  });
+});
+</script>

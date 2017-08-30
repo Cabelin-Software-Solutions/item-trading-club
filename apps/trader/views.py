@@ -6,7 +6,9 @@ from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.decorators import login_required
-from .forms import LoginForm, RegisterForm
+from django.views.decorators.csrf import csrf_protect
+from .forms import LoginForm, RegisterForm, ItemForm, DeleteItemForm, EditItemForm
+from .models import Item
 
 # Create your views here.
 def index(request):
@@ -69,8 +71,57 @@ def profile_view(request):
 
 @login_required
 def my_items_view(request):
-    return render(request, 'my_items.html')
+    if request.method == 'POST':
+        form = ItemForm(request.POST)
+        if form.is_valid():
+            item = Item(name=form.cleaned_data['name'],
+                description=form.cleaned_data['description'],
+                image=form.cleaned_data['image'],
+                owner=request.user)
+            item.save()
+            return HttpResponseRedirect('/my_items')
+    else:
+        items = Item.objects.filter(owner=request.user)
+        item_form = ItemForm()
+        delete_form = DeleteItemForm()
+        return render(request, 'my_items.html', {
+            'item_form': item_form,
+            'delete_form': delete_form,
+            'items': items
+        })
+
+@login_required
+def item_add_view(request):
+    pass
+
+@login_required
+def item_edit_view(request):
+    if request.method == 'POST':
+        pass
+    else:
+        item_id = request.GET.get('id')
+        item = Item.objects.get(id = item_id, owner = request.user.id)
+        print item.name
+        item_form = EditItemForm({'name':item.name, 'description':item.description, 'image':item.image})
+        return render(request, 'edit_item.html', {
+            'item_form': item_form
+            })
+
+@login_required
+def item_delete_view(request):
+    if request.method == 'POST':
+        form = DeleteItemForm(request.POST)
+        if form.is_valid():
+            item_id = form.cleaned_data['id']
+            i = Item.objects.get(id = item_id)
+            i.delete()
+            return HttpResponseRedirect('/my_items')
+    else:
+        return HttpResponseRedirect('/')
 
 @login_required
 def market_view(request):
-    return render(request, 'market.html')
+    items = Item.objects.all()
+    return render(request, 'market.html', {
+        'items': items
+    })
