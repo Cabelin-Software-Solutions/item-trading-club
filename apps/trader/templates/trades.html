@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+
+{% block content %}
+    
+<!--Proposed trade requests-->
+<ul>
+    {% for trade in sent_proposals %}
+        <li><a href="/item/trade/{{trade.id}}/window">Trade Request for {{ trade.receiver_item.name }} owned by {{ trade.receiver.first_name }}</a></li>
+    {% endfor %}
+</ul>
+<!---->
+
+<!--Received trade requests-->
+<ul>
+    {% for trade in received_proposals %}
+        <li><a href="/item/trade/{{trade.id}}/window">{{ trade.sender.first_name }} has sent you a trade request</a></li>
+    {% endfor %}
+</ul>
+<!---->
+
+<!--Completed trade requests-->
+<ul>
+    {% for trade in completed_proposals%}
+        <li>{{ trade.log_message}}</li>
+    {% endfor %}
+</ul>
+<!---->
+
+{% include 'base_scripts.html' %}
+{% endblock %}

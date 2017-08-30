@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import Item
+from .models import Item, Proposal
 
 class LoginForm(forms.Form):
     username = forms.CharField(label='User Name', max_length=64)
