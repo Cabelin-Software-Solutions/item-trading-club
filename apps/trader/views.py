@@ -78,7 +78,8 @@ def my_items_view(request):
             item = Item(name=form.cleaned_data['name'],
                 description=form.cleaned_data['description'],
                 image=form.cleaned_data['image'],
-                owner=request.user)
+                owner=request.user,
+                in_sender_trade=False)
             item.save()
             return HttpResponseRedirect('/my_items')
     else:

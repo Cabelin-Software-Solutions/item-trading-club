@@ -28,3 +28,4 @@ class EditItemForm(forms.Form):
     name = forms.CharField(max_length=255)
     description = forms.CharField(widget=forms.Textarea)
     image = forms.CharField(max_length=255)
+
