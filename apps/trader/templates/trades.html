@@ -11,7 +11,7 @@
             <h1>Proposed Trade Requests</h1>
             <ul>
                 {% for trade in sent_proposals %}
-                    <li><a href="/item/trade/{{trade.id}}/window">Trade Request for {{ trade.receiver_item.name }} owned by {{ trade.receiver.first_name }}</a></li>
+                    <li><a href="/item/trade/{{trade.id}}/window">Trade Request for {{ trade.receiver_item.name }} owned by {{ trade.receiver.first_name }}</a> - {{trade.status}}</li>
                 {% endfor %}
             </ul>
             <!---->
@@ -20,7 +20,7 @@
             <h1>Received Trade Requests</h1>
             <ul>
                 {% for trade in received_proposals %}
-                    <li><a href="/item/trade/{{trade.id}}/window">{{ trade.sender.first_name }} has sent you a trade request</a></li>
+                    <li><a href="/item/trade/{{trade.id}}/window">{{ trade.sender.first_name }} has sent you a trade request</a> - {{trade.status}}</li>
                 {% endfor %}
             </ul>
             <!---->

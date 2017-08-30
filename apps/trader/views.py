@@ -188,8 +188,8 @@ def market_view(request):
 @login_required
 def trade_view(request):
     # use filters
-    sent_proposals = Proposal.objects.filter(sender=request.user).exclude(status="Complete")
-    received_proposals = Proposal.objects.filter(receiver=request.user).exclude(status="Complete")
+    sent_proposals = Proposal.objects.filter(sender=request.user).exclude(status="Complete").exclude(status="Cancelled").exclude(status="Rejected")
+    received_proposals = Proposal.objects.filter(receiver=request.user).exclude(status="Complete").exclude(status="Cancelled").exclude(status="Rejected")
     completed_proposals = Proposal.objects.filter(Q(sender=request.user) | Q(receiver=request.user)).filter(status="Complete")
     context = {
         'received_proposals' : received_proposals,
@@ -325,14 +325,11 @@ def trade_reject_view(request, trade_id):
     if request.method == "POST":
         proposal = Proposal.objects.get(pk=trade_id)
         if proposal.status != 'Cancelled':
-            if proposal.is_finalized:
-                proposal.sender_item.in_sender_trade = False
-                proposal.sender_item.save()
-                proposal.is_finalized = False
-                proposal.status = "Rejected"
-                proposal.save()
-                return HttpResponseRedirect("/trades?message=Trade Rejected")
-            else:
-                return HttpResponseRedirect("/item/trade/"+ trade_id +"/window?error=Trade must be finalized by the Sender")
+            proposal.sender_item.in_sender_trade = False
+            proposal.sender_item.save()
+            proposal.is_finalized = False
+            proposal.status = "Rejected"
+            proposal.save()
+            return HttpResponseRedirect("/trades?message=Trade Rejected")
     return HttpResponseRedirect("/item/trade/"+ trade_id +"/window?error=Something went wrong")
 
