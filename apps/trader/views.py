@@ -179,7 +179,7 @@ def item_delete_view(request):
 
 @login_required
 def market_view(request):
-    items = Item.objects.all()
+    items = Item.objects.all().exclude(owner=request.user.id)
     return render(request, 'market.html', {
         'items': items
     })
