@@ -38,3 +38,7 @@ div.alert {
 .flexed-items {
   margin: 5px -1px;
 }
+
+.form-btn {
+  display: inline;
+}

@@ -179,7 +179,7 @@ def item_delete_view(request):
 
 @login_required
 def market_view(request):
-    items = Item.objects.all()
+    items = Item.objects.all().exclude(owner=request.user.id)
     return render(request, 'market.html', {
         'items': items
     })
@@ -231,7 +231,10 @@ def trade_window_view(request, trade_id):
         context = {
             'user'            : current_user,
             'proposal'        : proposal,
-            'avail_items'     : sender_items
+            'avail_items'     : sender_items,
+            'message'         : request.GET.get('message'),
+            'error'           : request.GET.get('error')
+
         }
 
         return render(request, "trade_window.html", context)
