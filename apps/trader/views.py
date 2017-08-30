@@ -97,12 +97,25 @@ def item_add_view(request):
 @login_required
 def item_edit_view(request):
     if request.method == 'POST':
-        pass
+        form = EditItemForm(request.POST)
+        if form.is_valid():
+            item_id = form.cleaned_data['id']
+            i = Item.objects.get(id=item_id, owner=request.user)
+            if i:
+                i.name = form.cleaned_data['name']
+                i.description = form.cleaned_data['description']
+                i.image = form.cleaned_data['image']
+                i.save()
+                item_id = str(item_id)
+                return HttpResponseRedirect('/my_items')
+            else:
+                return HttpResponseRedirect('/item/edit?id=' + item_id + '&error=Item not found')
+
     else:
         item_id = request.GET.get('id')
         item = Item.objects.get(id = item_id, owner = request.user.id)
         print item.name
-        item_form = EditItemForm({'name':item.name, 'description':item.description, 'image':item.image})
+        item_form = EditItemForm({'id':item_id,'name':item.name, 'description':item.description, 'image':item.image})
         return render(request, 'edit_item.html', {
             'item_form': item_form
             })

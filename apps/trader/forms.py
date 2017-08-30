@@ -25,6 +25,7 @@ class DeleteItemForm(forms.Form):
     id = forms.IntegerField()
 
 class EditItemForm(forms.Form):
+    id = forms.IntegerField(widget=forms.HiddenInput())
     name = forms.CharField(max_length=255)
     description = forms.CharField(widget=forms.Textarea)
     image = forms.CharField(max_length=255)
