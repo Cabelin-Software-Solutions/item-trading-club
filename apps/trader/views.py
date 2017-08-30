@@ -7,9 +7,11 @@ from django.contrib.auth import login, logout, authenticate, update_session_auth
 from django.contrib.auth.forms import UserCreationForm, PasswordChangeForm
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_protect
+from .models import Item, Proposal, Log
+from django.db.models import Q
 from .forms import LoginForm, RegisterForm, ItemForm, DeleteItemForm, EditItemForm, EditUserForm, ChangePasswordForm, AlertForm
 from django.contrib.auth.models import User
-from .models import Item
+
 
 # Create your views here.
 def index(request):
@@ -121,7 +123,8 @@ def my_items_view(request):
             item = Item(name=form.cleaned_data['name'],
                 description=form.cleaned_data['description'],
                 image=form.cleaned_data['image'],
-                owner=request.user)
+                owner=request.user,
+                in_sender_trade=False)
             item.save()
             return HttpResponseRedirect('/my_items')
     else:
@@ -180,3 +183,156 @@ def market_view(request):
     return render(request, 'market.html', {
         'items': items
     })
+
+
+@login_required
+def trade_view(request):
+    # use filters
+    sent_proposals = Proposal.objects.filter(sender=request.user).exclude(status="Complete")
+    received_proposals = Proposal.objects.filter(receiver=request.user).exclude(status="Complete")
+    completed_proposals = Proposal.objects.filter(Q(sender=request.user) | Q(receiver=request.user)).filter(status="Complete")
+    context = {
+        'received_proposals' : received_proposals,
+        'sent_proposals' : sent_proposals,
+        'completed_proposals': completed_proposals
+    }
+    return render(request, 'market.html', context)
+
+@login_required
+def trade_request_view(request):
+    if request.method == "POST":
+        # get receiver_item object based on item id
+        rec_item = Item.objects.get(pk=request.POST['item_id'])
+        if rec_item.in_sender_trade == True:
+            return HttpResponseRedirect("/market?error=Item is currently being traded by the owner")
+        rec = rec_item.owner
+
+        # create default item
+        try:
+            default_item = Item.objects.get(name="No item in trade")
+        except:
+            default_item = Item.objects.create(name="No item in trade", description="None", image="None",in_sender_trade=False)
+
+        # create proposal object
+        proposal = Proposal(status="Pending",sender=request.user,sender_item=default_item,receiver=rec,receiver_item=rec_item,is_finalized=False)
+        proposal.save()
+        trade_id = proposal.id
+    return HttpResponseRedirect("/item/trade/"+ trade_id +"/window?message=Successfully created a trade request")
+
+@login_required
+def trade_window_view(request, trade_id):
+    proposal = Proposal.objects.get(pk=trade_id)
+    if request.user.id != proposal.sender.id or request.user.id != proposal.receiver.id:
+        return HttpResponseRedirect("/trades?error=Unauthorized Access")
+    if not proposal.sender_item or not proposal.receiver_item:
+        return HttpResponseRedirect("/trades?error=Invalid Proposal. Either proposal may have been completed, and items have changed owners, or an error has been encountered in the trade request")
+
+    current_user = request.user
+    sender_items = Item.objects.filter(owner=proposal.sender).filter(in_sender_trade=False)
+    context = {
+        'user'            : current_user,
+        'proposal'        : proposal,
+        'avail_items'     : sender_items
+    }
+
+    return render(request, "trade_window.html", context)
+
+@login_required
+def trade_update_view(request, trade_id):
+    if request.method == "POST":
+        proposal = Proposal.objects.get(pk=trade_id)
+        if not proposal.sender_item or not proposal.receiver_item:
+            return HttpResponseRedirect("/trades?error=Invalid Proposal. Either proposal may have been completed, and items have changed owners, or an error has been encountered in the trade request")
+
+        if proposal.status != 'Cancelled':
+            if proposal.is_finalized == False:
+                new_trade_item = Item.objects.get(pk=request.POST['item'])
+                proposal.sender_item.in_sender_trade = False
+                proposal.sender_item.save()
+                proposal.sender_item = new_trade_item
+                proposal.save()
+                proposal.sender_item.in_sender_trade = True
+                proposal.sender_item.save()
+                return HttpResponseRedirect("/item/trade/"+ trade_id +"/window?message=Successfully updated your trade request")
+            else:
+                return HttpResponseRedirect("/item/trade/"+ trade_id +"/window?error=Cannot update a finalized trade request")
+                
+    return HttpResponseRedirect("/item/trade/"+ trade_id +"/window?error=Something went wrong")
+
+@login_required
+def trade_finalize_view(request, trade_id):
+    if request.method == "POST":
+        proposal = Proposal.objects.get(pk=trade_id)
+        if not proposal.sender_item or not proposal.receiver_item:
+            return HttpResponseRedirect("/trades?error=Invalid Proposal. Either proposal may have been completed, and items have changed owners, or an error has been encountered in the trade request")
+        if proposal.status != 'Cancelled':
+            if proposal.sender_item.name != 'No item in trade':
+                proposal.is_finalized = True
+                proposal.status = "Finalized"
+                proposal.save()
+                return HttpResponseRedirect("/item/trade/"+ trade_id +"/window?message=Finalized your trade request")
+            else:
+                return HttpResponseRedirect("/item/trade/"+ trade_id +"/window?error=Please offer an item to trade")
+
+    return HttpResponseRedirect("/item/trade/"+ trade_id +"/window?error=Something went wrong")
+
+@login_required
+def trade_cancel_view(request, trade_id):
+    if request.method == "POST":
+        proposal = Proposal.objects.get(pk=trade_id)
+        if not proposal.sender_item or not proposal.receiver_item:
+            return HttpResponseRedirect("/trades?error=Invalid Proposal. Either proposal may have been completed, and items have changed owners, or an error has been encountered in the trade request")
+        proposal.sender_item.in_sender_trade = False
+        proposal.sender_item.save()
+        proposal.is_finalized = False
+        proposal.status = "Cancelled"
+        proposal.save()
+        return HttpResponseRedirect("/trades?message=You cancelled your trade request")
+    return HttpResponseRedirect("/item/trade/"+ trade_id +"/window?error=Something went wrong")
+
+
+
+@login_required
+def trade_accept_view(request, trade_id):
+    if request.method == "POST":
+        proposal = Proposal.objects.get(pk=trade_id)
+        if proposal.status != 'Cancelled':
+            if proposal.is_finalized:
+                rec_item = proposal.receiver_item
+                rec_item.owner = proposal.sender
+                rec_item.save()
+                rec_item.item_receive_proposals.clear()
+                rec_item.item_send_proposals.clear()
+
+                sen_item = proposal.sender_item
+                sen_item.owner = proposal.receiver
+                sen_item.save()
+                sen_item.item_receive_proposals.clear()
+                sen_item.item_send_proposals.clear()
+
+                proposal.status = "Complete"
+                proposal.save()
+
+                log_message = proposal.sender.first_name + " " + proposal.sender.last_name + " completed a trade request with " + proposal.receiver.first_name + " " + proposal.receiver.last_name
+                log = Log.objects.create(message=log_message, trade=proposal)
+                return HttpResponseRedirect("/trades?message=Trade Complete")
+            else:
+                return HttpResponseRedirect("/item/trade/"+ trade_id +"/window?error=Trade must be finalized by the Sender")
+    return HttpResponseRedirect("/item/trade/"+ trade_id +"/window?error=Something went wrong")
+
+@login_required
+def trade_reject_view(request, trade_id):
+    if request.method == "POST":
+        proposal = Proposal.objects.get(pk=trade_id)
+        if proposal.status != 'Cancelled':
+            if proposal.is_finalized:
+                proposal.sender_item.in_sender_trade = False
+                proposal.sender_item.save()
+                proposal.is_finalized = False
+                proposal.status = "Rejected"
+                proposal.save()
+                return HttpResponseRedirect("/trades?message=Trade Rejected")
+            else:
+                return HttpResponseRedirect("/item/trade/"+ trade_id +"/window?error=Trade must be finalized by the Sender")
+    return HttpResponseRedirect("/item/trade/"+ trade_id +"/window?error=Something went wrong")
+
