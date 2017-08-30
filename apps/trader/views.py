@@ -217,7 +217,7 @@ def trade_request_view(request):
         proposal = Proposal(status="Pending",sender=request.user,sender_item=default_item,receiver=rec,receiver_item=rec_item,is_finalized=False)
         proposal.save()
         trade_id = proposal.id
-    return HttpResponseRedirect("/item/trade/"+ trade_id +"/window?message=Successfully created a trade request")
+    return HttpResponseRedirect("/item/trade/"+ str(trade_id) +"/window?message=Successfully created a trade request")
 
 @login_required
 def trade_window_view(request, trade_id):
@@ -256,7 +256,7 @@ def trade_update_view(request, trade_id):
                 return HttpResponseRedirect("/item/trade/"+ trade_id +"/window?message=Successfully updated your trade request")
             else:
                 return HttpResponseRedirect("/item/trade/"+ trade_id +"/window?error=Cannot update a finalized trade request")
-                
+
     return HttpResponseRedirect("/item/trade/"+ trade_id +"/window?error=Something went wrong")
 
 @login_required
@@ -335,4 +335,3 @@ def trade_reject_view(request, trade_id):
             else:
                 return HttpResponseRedirect("/item/trade/"+ trade_id +"/window?error=Trade must be finalized by the Sender")
     return HttpResponseRedirect("/item/trade/"+ trade_id +"/window?error=Something went wrong")
-
