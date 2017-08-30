@@ -9,6 +9,42 @@
         <p class="lead text-center">This is where you can edit your profile (Firstname, Lastname, Email, Password).</p>
     </div>
   </div>
+  <div class="col-md-6">
+    <form action="/profile/edit/" method="POST">
+      <h3>Edit Info</h3>
+      {% csrf_token %}
+      {% for field in form %}
+        <div class="fieldWrapper">
+          {{ field.errors }}
+          {{ field.label_tag }} {{ field }}
+          {% if field.help_text %}
+          <p class="help">{{ field.help_text|safe }}</p>
+          {% endif %}
+        </div>
+      {% endfor %}
+      <div class="form-group fieldWrapper">
+        <button class="btn btn-primary" type="submit">Submit</button>
+      </div>
+    </form>
+  </div>
+  <div class="col-md-6">
+    <form action="/password/edit/" method="POST">
+      <h3>Change Password</h3>
+      {% csrf_token %}
+      {% for field in password_form %}
+        <div class="fieldWrapper">
+          {{ field.errors }}
+          {{ field.label_tag }} {{ field }}
+          {% if field.help_text %}
+          <p class="help">{{ field.help_text|safe }}</p>
+          {% endif %}
+        </div>
+      {% endfor %}
+      <div class="form-group fieldWrapper">
+        <button class="btn btn-primary" type="submit">Submit</button>
+      </div>
+    </form>
+  </div>
 </div>
 
 {% include 'base_scripts.html' %}

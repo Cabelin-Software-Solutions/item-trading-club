@@ -3,24 +3,23 @@ from __future__ import unicode_literals
 
 from django.shortcuts import render
 from django.http import HttpResponseRedirect, HttpResponse
-from django.contrib.auth import login, logout, authenticate
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth import login, logout, authenticate, update_session_auth_hash
+from django.contrib.auth.forms import UserCreationForm, PasswordChangeForm
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_protect
-from .forms import LoginForm, RegisterForm, ItemForm, DeleteItemForm, EditItemForm
+from .forms import LoginForm, RegisterForm, ItemForm, DeleteItemForm, EditItemForm, EditUserForm, ChangePasswordForm, AlertForm
+from django.contrib.auth.models import User
 from .models import Item
 
 # Create your views here.
 def index(request):
     login_form = LoginForm()
     register_form = RegisterForm()
-    message = request.GET.get('message')
-    error = request.GET.get('error')
     return render(request, 'index.html', {
                 'login_form': login_form,
                 'register_form': register_form,
-                'message': message,
-                'error': error
+                'message': request.GET.get('message'),
+                'error': request.GET.get('error')
             })
 
 # authentication views
@@ -67,7 +66,52 @@ def logout_view(request):
 
 @login_required
 def profile_view(request):
-    return render(request, 'profile.html')
+    if request.method == 'POST':
+        pass
+    else:
+        user = User.objects.get(id = request.user.id)
+        edit_profile_form = EditUserForm({'username':user.username,
+            'first_name':user.first_name,
+            'last_name':user.last_name,
+            'email':user.email
+        })
+        password_form = PasswordChangeForm(request)
+        return render(request, 'profile.html', {
+            'form': edit_profile_form,
+            'password_form': password_form,
+            'message': request.GET.get('message'),
+            'error': request.GET.get('error')
+        })
+
+@login_required
+def profile_edit_view(request):
+    if request.method == 'POST':
+        form = EditUserForm(request.POST)
+        if form.is_valid():
+            username = form.cleaned_data['username']
+            first_name = form.cleaned_data['first_name']
+            last_name = form.cleaned_data['last_name']
+            email = form.cleaned_data['email']
+            user = User.objects.get(id = request.user.id)
+            user.username = username
+            user.first_name = first_name
+            user.last_name = last_name
+            user.email = email
+            user.save()
+            return HttpResponseRedirect('/profile?message=Successfully changed profile info')
+        else:
+            return HttpResponseRedirect('/profile?error=Error editing password')
+
+@login_required
+def password_edit_view(request):
+    if request.method == 'POST':
+        form = PasswordChangeForm(user=request.user, data=request.POST)
+        if form.is_valid():
+            form.save()
+            update_session_auth_hash(request, form.user)
+            return HttpResponseRedirect('/profile?message=Successfully changed password')
+        else:
+            return HttpResponseRedirect('/profile?error=Error changing password')
 
 @login_required
 def my_items_view(request):
@@ -81,7 +125,7 @@ def my_items_view(request):
             item.save()
             return HttpResponseRedirect('/my_items')
     else:
-        items = Item.objects.filter(owner=request.user)
+        items = Item.objects.filter(owner=request.user).order_by('-updated_at')
         item_form = ItemForm()
         delete_form = DeleteItemForm()
         return render(request, 'my_items.html', {
@@ -89,10 +133,6 @@ def my_items_view(request):
             'delete_form': delete_form,
             'items': items
         })
-
-@login_required
-def item_add_view(request):
-    pass
 
 @login_required
 def item_edit_view(request):
@@ -113,12 +153,14 @@ def item_edit_view(request):
 
     else:
         item_id = request.GET.get('id')
-        item = Item.objects.get(id = item_id, owner = request.user.id)
-        print item.name
-        item_form = EditItemForm({'id':item_id,'name':item.name, 'description':item.description, 'image':item.image})
-        return render(request, 'edit_item.html', {
-            'item_form': item_form
-            })
+        try:
+            item = Item.objects.get(id = item_id, owner = request.user.id)
+            item_form = EditItemForm({'id':item_id,'name':item.name, 'description':item.description, 'image':item.image})
+            return render(request, 'edit_item.html', {
+                'item_form': item_form
+                })
+        except:
+            return HttpResponseRedirect('/my_items?error=Item not found')
 
 @login_required
 def item_delete_view(request):
